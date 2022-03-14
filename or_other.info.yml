@@ -1,0 +1,5 @@
+name: Or Other
+type: module
+description: Add string field formatter that provides a select list with an 'other' option.
+core_version_requirement: ^8 || ^9
+package: Fields

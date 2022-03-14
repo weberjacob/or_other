@@ -1,0 +1,22 @@
+{
+  "name": "jacerider/or_other",
+  "description": "Add string field formatter that provides a select list with an 'other' option.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "https://github.com/jacerider/or_other",
+  "authors": [
+    {
+      "name": "Cyle Carlson (JaceRider)",
+      "email": "jacerider@gmail.com",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/jacerider/or_other/issues",
+    "source": "https://github.com/jacerider/or_other"
+  },
+  "minimum-stability": "dev",
+  "require": {
+    "drupal/core": "^8.8 || ^9"
+  }
+}
