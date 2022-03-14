@@ -138,8 +138,10 @@ abstract class OrOtherWidgetBase extends WidgetBase {
    *
    * @param array $element
    *   The form element.
+   * @param array $current_path
+   *   The current path.
    */
-  protected function getElementPath(array $element, $current_path = []) {
+  protected function getElementPath(array $element, array $current_path = []) {
     $name = '';
     foreach ($element['#field_parents'] as $parent) {
       if (empty($name)) {

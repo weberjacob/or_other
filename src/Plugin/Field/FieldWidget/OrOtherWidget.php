@@ -65,7 +65,7 @@ class OrOtherWidget extends OrOtherWidgetBase {
    * {@inheritdoc}
    */
   protected function getOptions() {
-    $options = $this->extractAllowedValues($this->getSetting('options'));
+    $options = $this->extractAllowedValues($this->getSetting('options')) ?: [];
     // Add an empty option if the widget needs one.
     if ($empty_label = $this->getEmptyLabel()) {
       $options = ['' => $empty_label] + $options;
@@ -81,7 +81,9 @@ class OrOtherWidget extends OrOtherWidgetBase {
     $description .= '<br/>' . t('The key is the stored value. The label will be used in displayed values and edit forms.');
     $description .= '<br/>' . t('The label is optional: if a line contains a single string, it will be used as key and label.');
     $description .= '</p>';
-    $description .= '<p>' . t('Allowed HTML tags in labels: @tags', ['@tags' => implode(', ', FieldFilteredMarkup::allowedTags())]) . '</p>';
+    $description .= '<p>' . t('Allowed HTML tags in labels: @tags', [
+      '@tags' => implode(', ', FieldFilteredMarkup::allowedTags()),
+    ]) . '</p>';
     return $description;
   }
 
