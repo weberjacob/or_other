@@ -89,7 +89,7 @@ abstract class OrOtherWidgetBase extends WidgetBase {
     $this->required = $element['#required'];
     $this->multiple = $this->fieldDefinition->getFieldStorageDefinition()->isMultiple();
 
-    $value = isset($items[$delta]->value) ? $items[$delta]->value : '';
+    $value = $items[$delta]->value ?? '';
     $options = $this->getOptions();
     // Add 'current value' if it does not exist in the options array. We assume
     // this was previously set as 'other'.
@@ -194,6 +194,20 @@ abstract class OrOtherWidgetBase extends WidgetBase {
    *   The array of options for the widget.
    */
   abstract protected function getOptions();
+
+  /**
+   * Returns the array of options for the widget.
+   *
+   * @return array
+   *   The array of options for the widget.
+   */
+  protected function getOptionsWithOther() {
+    $options = $this->getOptions();
+    if (!$this->getSetting('no_other')) {
+      $options['_other'] = $this->t('Other');
+    }
+    return $options;
+  }
 
   /**
    * {@inheritdoc}
