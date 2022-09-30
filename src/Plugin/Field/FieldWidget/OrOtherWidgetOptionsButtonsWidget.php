@@ -3,6 +3,7 @@
 namespace Drupal\or_other\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -55,32 +56,27 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
     $element['#pre_render'][] = [static::class, 'preRenderCompositeFormElement'];
 
     if ($this->multiple) {
-      // Add 'current value' if it does not exist in the options array. We assume
-      // this was previously set as 'other'.
-      // if ($value && !isset($options[$value])) {
-      //   $options[$value] = $value;
-      // }
       $element['values'] = [
         '#type' => 'container',
       ];
-      foreach ($options as $tid => $label) {
-        $path = $this->getElementPath($element, ['values', $tid, 'value']);
+      foreach ($options as $key => $label) {
+        $path = $this->getElementPath($element, ['values', $key, 'value']);
         $id = Html::getUniqueId('or-other-' . $path);
-        $element['values'][$tid]['value'] = [
+        $element['values'][$key]['value'] = [
           '#type' => 'checkbox',
           '#id' => $id,
           '#title_lock' => TRUE,
           '#ux_wrapper_supported' => FALSE,
           '#title' => $label,
-          '#term_name' => $label,
-          '#default_value' => !empty($selected[$tid]['value']),
+          '#option_name' => $label,
+          '#default_value' => !empty($selected[$key]['value']),
         ];
-        if (!empty($other_triggers[$tid])) {
-          $element['values'][$tid]['other'] = [
+        if (!empty($other_triggers[$key])) {
+          $element['values'][$key]['other'] = [
             '#type' => 'textfield',
             '#attributes' => ['class' => ['js-text-full', 'text-full']],
             '#placeholder' => str_replace('@value', $label, $this->getSetting('placeholder')),
-            '#default_value' => $selected[$tid]['other'] ?? '',
+            '#default_value' => $selected[$key]['other'] ?? '',
             '#states' => [
               'visible' => [
                 '#' . $id => ['checked' => TRUE],
@@ -101,32 +97,33 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       $element['values'] = [
         '#type' => 'container',
       ];
-      $path = $this->getElementPath($element, ['values']);
-      $id = Html::getUniqueId('or-other-' . $path);
-      foreach ($options as $tid => $label) {
-        $element['values'][$tid]['value'] = [
+      $path = $this->getElementPath($element, ['value']);
+      foreach ($options as $key => $label) {
+        $element['values'][$key]['value'] = [
           '#type' => 'radio',
           '#title_lock' => TRUE,
           '#ux_wrapper_supported' => FALSE,
           '#name' => $path,
-          '#return_value' => $tid,
+          '#return_value' => $key,
           '#title' => $label,
-          '#term_name' => $label,
-          '#default_value' => !empty($selected[$tid]['value']),
+          '#option_name' => $label,
         ];
-        if (!empty($other_triggers[$tid])) {
-          $element['values'][$tid]['other'] = [
+        if (!empty($selected[$key]['value'])) {
+          $element['values'][$key]['value']['#attributes']['checked'] = 'checked';
+        }
+        if (!empty($other_triggers[$key])) {
+          $element['values'][$key]['other'] = [
             '#type' => 'textfield',
             '#title_lock' => TRUE,
             '#attributes' => ['class' => ['js-text-full', 'text-full']],
             '#placeholder' => str_replace('@value', $label, $this->getSetting('placeholder')),
-            '#default_value' => $selected[$tid]['other'] ?? '',
+            '#default_value' => $selected[$key]['other'] ?? '',
             '#states' => [
               'visible' => [
-                '#' . $id => ['value' => $tid],
+                ':input[name="' . $path . '"]' => ['value' => $key],
               ],
               'required' => [
-                '#' . $id => ['value' => $tid],
+                ':input[name="' . $path . '"]' => ['value' => $key],
               ],
             ],
           ];
@@ -135,6 +132,7 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       // Add our custom validator.
       $element['#element_validate'][] = [get_class($this), 'validateElement'];
     }
+    // ksm($element);
 
     return $element;
   }
@@ -144,12 +142,17 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
    */
   public static function validateElement(array $element, FormStateInterface $form_state) {
     $items = [];
-    $value = $element['value']['#value'];
-    $other_value = $element['other']['#value'];
-    if ($value === 'Other') {
-      $value = $other_value;
+    $value = NULL;
+    $values = $form_state->getValue($element['#parents']);
+    $submitted_values = NestedArray::getValue($form_state->getUserInput(), $element['#parents']);
+    if (!empty($submitted_values['value']) && isset($element['values'][$submitted_values['value']]['value']['#option_name'])) {
+      $value = $element['values'][$submitted_values['value']]['value']['#option_name'];
+      $input_values = $values['values'][$submitted_values['value']];
+      if (!empty($input_values['other'])) {
+        $value .= self::$delimiter . $input_values['other'];
+      }
+      $items[] = ['value' => $value];
     }
-    $items[] = ['value' => $value];
     $form_state->setValueForElement($element, $items);
   }
 
@@ -161,7 +164,7 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
     foreach (Element::children($element['values']) as $key) {
       $child_element = $element['values'][$key];
       if ($child_element['value']['#value']) {
-        $value = $child_element['value']['#term_name'];
+        $value = $child_element['value']['#option_name'];
         if (!empty($child_element['other']['#value'])) {
           $value .= self::$delimiter . $child_element['other']['#value'];
         }
@@ -198,25 +201,32 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       $selected_options = [];
       foreach ($items as $item) {
         $full_value = $item->value;
-        foreach ($flat_options as $tid => $option_value) {
+        foreach ($flat_options as $id => $option_value) {
           $value = substr($full_value, 0, strlen($option_value));
           $other_value = substr($full_value, strlen($value . self::$delimiter));
           if ($full_value === $option_value || $value . self::$delimiter . $other_value === $full_value) {
-            $selected_options[$tid]['value'] = $value;
-            $selected_options[$tid]['other'] = $other_value;
+            $selected_options[$id]['value'] = $value;
+            $selected_options[$id]['other'] = $other_value;
           }
         }
       }
     }
     else {
-      $value = $items[0]->value ?? '';
-      $other = '';
-      if (!empty($value) && !isset($flat_options[$value])) {
-        $other = $value;
-        $value = 'Other';
+      $selected_options = [];
+      $full_value = $items[0]->value ?? '';
+      foreach ($flat_options as $id => $option_value) {
+        if ($full_value === $option_value) {
+          $selected_options[$id]['value'] = $option_value;
+        }
+        else {
+          $value = substr($full_value, 0, strlen($option_value));
+          $other_value = substr($full_value, strlen($value . self::$delimiter));
+          if ($full_value === $option_value || $value . self::$delimiter . $other_value === $full_value) {
+            $selected_options[$id]['value'] = $option_value;
+            $selected_options[$id]['other'] = $other_value;
+          }
+        }
       }
-      $selected_options['value'] = $value;
-      $selected_options['other'] = $other;
     }
 
     return $selected_options;
