@@ -145,19 +145,6 @@ class OrOtherTaxonomyWidget extends OrOtherWidgetBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  protected function getEmptyLabel() {
-    // Single select: add a 'none' option for non-required fields,
-    // and a 'select a value' option for required fields that do not come
-    // with a value selected.
-    if (!$this->fieldDefinition->isRequired()) {
-      return t('- None -');
-    }
-    return t('- Select -');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function isApplicable(FieldDefinitionInterface $field_definition) {
     return \Drupal::moduleHandler()->moduleExists('taxonomy');
   }

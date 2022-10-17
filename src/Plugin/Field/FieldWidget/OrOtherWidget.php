@@ -90,19 +90,6 @@ class OrOtherWidget extends OrOtherWidgetBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEmptyLabel() {
-    // Single select: add a 'none' option for non-required fields,
-    // and a 'select a value' option for required fields that do not come
-    // with a value selected.
-    if (!$this->fieldDefinition->isRequired()) {
-      return t('- None -');
-    }
-    return t('- Select -');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected static function validateAllowedValue($option) {
     if (mb_strlen($option) > 255) {
       return t('Allowed values list: each key must be a string at most 255 characters long.');

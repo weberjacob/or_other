@@ -20,6 +20,7 @@ abstract class OrOtherWidgetBase extends WidgetBase {
     return [
       'placeholder' => 'Other',
       'no_other' => FALSE,
+      'no_empty' => FALSE,
       'other_triggers' => [],
     ] + parent::defaultSettings();
   }
@@ -34,6 +35,9 @@ abstract class OrOtherWidgetBase extends WidgetBase {
     }
     if ($this->getSetting('no_other')) {
       $summary[] = t('Other option: Disabled');
+    }
+    if ($this->getSetting('no_empty')) {
+      $summary[] = t('Empty option: Disabled');
     }
     if ($options = $this->getOtherTriggers()) {
       $summary[] = t('Triggers:');
@@ -60,6 +64,13 @@ abstract class OrOtherWidgetBase extends WidgetBase {
       '#title' => t('Disable other option'),
       '#default_value' => $this->getSetting('no_other'),
     ];
+    if (!$this->multiple && !$this->fieldDefinition->isRequired()) {
+      $element['no_empty'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Disable empty option'),
+        '#default_value' => $this->getSetting('no_empty'),
+      ];
+    }
     if ($options = $this->getOtherTriggerOptions()) {
       $element['other_triggers'] = [
         '#type' => 'checkboxes',
@@ -106,6 +117,7 @@ abstract class OrOtherWidgetBase extends WidgetBase {
     $id = Html::getUniqueId('or-other-' . $path);
     $other_triggers = $this->getOtherTriggers();
 
+    $element['#or_other_type'] = $this->getPluginId();
     $element['value'] = $element + [
       '#type' => 'select',
       '#id' => $id,
@@ -207,6 +219,22 @@ abstract class OrOtherWidgetBase extends WidgetBase {
       $options['_other'] = $this->t('Other');
     }
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEmptyLabel() {
+    if ($this->getSetting('no_empty')) {
+      return NULL;
+    }
+    // Single select: add a 'none' option for non-required fields,
+    // and a 'select a value' option for required fields that do not come
+    // with a value selected.
+    if (!$this->fieldDefinition->isRequired()) {
+      return t('- None -');
+    }
+    return t('- Select -');
   }
 
   /**

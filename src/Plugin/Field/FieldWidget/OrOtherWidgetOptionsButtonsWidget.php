@@ -54,6 +54,7 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
     $options = $this->getOptionsWithOther();
 
     $element['#pre_render'][] = [static::class, 'preRenderCompositeFormElement'];
+    $element['#or_other_type'] = $this->getPluginId();
 
     if ($this->multiple) {
       $element['values'] = [
@@ -132,8 +133,6 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       // Add our custom validator.
       $element['#element_validate'][] = [get_class($this), 'validateElement'];
     }
-    // ksm($element);
-
     return $element;
   }
 
@@ -163,6 +162,9 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
     $values = [];
     foreach (Element::children($element['values']) as $key) {
       $child_element = $element['values'][$key];
+      if (array_merge($element['#parents'], ['values', $key]) !== $child_element['#parents']) {
+        continue;
+      }
       if ($child_element['value']['#value']) {
         $value = $child_element['value']['#option_name'];
         if (!empty($child_element['other']['#value'])) {

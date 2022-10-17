@@ -57,6 +57,7 @@ class OrOtherTaxonomyOptionsButtonsWidget extends OrOtherTaxonomyWidget implemen
     $this->multiple = $this->fieldDefinition->getFieldStorageDefinition()->isMultiple();
     $other_triggers = $this->getOtherTriggers();
     $selected = $this->getSelectedOptions($items);
+    $element['#or_other_type'] = $this->getPluginId();
 
     $element['#pre_render'][] = [static::class, 'preRenderCompositeFormElement'];
 
