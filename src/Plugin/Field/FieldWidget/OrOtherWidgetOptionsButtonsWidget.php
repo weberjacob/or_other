@@ -5,12 +5,10 @@ namespace Drupal\or_other\Plugin\Field\FieldWidget;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\OptGroup;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\CompositeFormElementTrait;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
@@ -35,6 +33,20 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
    * @var string
    */
   public static $delimiter = ': ';
+
+  /**
+   * Stored required flag.
+   *
+   * @var bool
+   */
+  protected $required = FALSE;
+
+  /**
+   * Stored multiple flag.
+   *
+   * @var bool
+   */
+  protected $multiple = FALSE;
 
   /**
    * {@inheritdoc}
@@ -160,11 +172,13 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
    */
   public static function validateMultipleElement(array $element, FormStateInterface $form_state) {
     $values = [];
+    $first_value = NULL;
     foreach (Element::children($element['values']) as $key) {
       $child_element = $element['values'][$key];
       if (array_merge($element['#parents'], ['values', $key]) !== $child_element['#parents']) {
         continue;
       }
+      $first_value = $first_value ?? $child_element['value']['#option_name'] ?? NULL;
       if ($child_element['value']['#value']) {
         $value = $child_element['value']['#option_name'];
         if (!empty($child_element['other']['#value'])) {
@@ -174,13 +188,16 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       }
     }
 
-    if ($element['#required'] && empty($value)) {
+    if ($element['#required'] && empty($values)) {
       $form_state->setError($element, t('@name field is required.', ['@name' => $element['#title']]));
     }
 
     // Transpose selections from field => delta to delta => field.
     $items = [];
     foreach ($values as $value) {
+      // Condition fields "required" support. Without this, the field will
+      // always be flagged as empty.
+      $items['values'][$first_value]['value'] = TRUE;
       $items[] = ['value' => $value];
     }
     $form_state->setValueForElement($element, $items);
@@ -242,6 +259,17 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
       return NULL;
     }
     return parent::getEmptyLabel();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    // Condition fields "required" support. This is set in
+    // validateMultipleElement() and is unset here to prevent it from causing
+    // issues while it is set to the entity.
+    unset($values['values']);
+    return $values;
   }
 
 }
