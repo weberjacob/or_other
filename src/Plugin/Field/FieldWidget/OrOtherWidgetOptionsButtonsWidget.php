@@ -219,9 +219,9 @@ class OrOtherWidgetOptionsButtonsWidget extends OrOtherWidget implements Trusted
     if ($this->multiple) {
       $selected_options = [];
       foreach ($items as $item) {
-        $full_value = $item->value;
+        $full_value = $item->value ?? '';
         foreach ($flat_options as $id => $option_value) {
-          $value = substr($full_value, 0, strlen($option_value));
+          $value = substr($full_value ?? '', 0, strlen($option_value ?? ''));
           $other_value = substr($full_value, strlen($value . self::$delimiter));
           if ($full_value === $option_value || $value . self::$delimiter . $other_value === $full_value) {
             $selected_options[$id]['value'] = $value;
