@@ -14,6 +14,20 @@ use Drupal\Component\Utility\Html;
 abstract class OrOtherWidgetBase extends WidgetBase {
 
   /**
+   * Required flag.
+   *
+   * @var bool
+   */
+  protected $required;
+
+  /**
+   * Multiple flag.
+   *
+   * @var bool
+   */
+  protected $multiple;
+
+  /**
    * {@inheritdoc}
    */
   public static function defaultSettings() {
