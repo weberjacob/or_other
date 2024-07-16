@@ -23,6 +23,31 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 class OrOtherTaxonomyWidget extends OrOtherWidgetBase implements ContainerFactoryPluginInterface {
 
   /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
+   */
+  protected $entityTypeManager;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
+   *   The entity repository service used for retrieving entities.
+   */
+  protected $entityRepository;
+
+  /**
+   * The vocabulary options for the OrOtherTaxonomyWidget class.
+   *
+   * @var array
+   */
+  protected $vocabularyOptions;
+
+  /**
+   * @var array $taxonomyOptions
+   *   The options for the taxonomy widget.
+   */
+  protected $taxonomyOptions;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository) {
